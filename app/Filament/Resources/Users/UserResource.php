@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder; // 1. Tambahkan import Builder di sini
 
 class UserResource extends Resource
 {
@@ -32,6 +33,12 @@ class UserResource extends Resource
     protected static ?string $slug = 'akun-pegawai';
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    // 2. Filter query agar hanya menampilkan pegawai (is_staff = true)
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('is_staff', true);
+    }
 
     public static function form(Schema $schema): Schema
     {

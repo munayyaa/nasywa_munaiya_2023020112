@@ -6,19 +6,17 @@ namespace App\Models;
 
 // Kebutuhan user avatar atau foto profil
 
-
-
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-
 use Filament\AvatarProviders\UiAvatarsProvider;
-use Illuminate\Support\Facades\Storage;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable(['name', 'email', 'password', 'photo_path', 'is_staff'])]
 #[Hidden(['password', 'remember_token'])]
@@ -27,10 +25,24 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    // autorisasi user yang dapat mengakses panel admin (staff)
+    // autorisasi user untuk multi-panel (Admin & Siswa)
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->is_staff;
+        if ($panel->getId() === 'admin') {
+            return (bool) $this->is_staff; // Hanya pegawai/staff
+        }
+
+        if ($panel->getId() === 'siswa') {
+            return ! $this->is_staff; // Hanya siswa (bukan staff)
+        }
+
+        return false;
+    }
+
+    // Relasi ke tabel Siswa
+    public function siswa(): HasOne
+    {
+        return $this->hasOne(Siswa::class);
     }
 
     /**
@@ -47,7 +59,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         ];
     }
 
-
     // ubah foto dalam format URL
     public function getFilamentAvatarUrl(): ?string
     {
@@ -60,5 +71,4 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
         return (new UiAvatarsProvider)->get($this);
     }
-
 }
